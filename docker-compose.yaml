@@ -31,6 +31,44 @@ services:
   #   networks:
   #     - app-network
 
+ #MySQL Service
+  mysql:
+    image: mysql:5.7.22
+    container_name: mysql
+    restart: always
+    tty: true
+    ports:
+      # - "3306:3306"
+      - "3306"
+    environment:
+      MYSQL_DATABASE: admiapp
+      MYSQL_ROOT_PASSWORD: your_mysql_root_password
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+      MYSQL_USER: user
+      MYSQL_PASSWORD: mysql_password
+    volumes:
+      - ./mysql/dbdata/:/var/lib/mysql/
+      - ./mysql/my.cnf/:/etc/mysql/my.cnf
+    networks:
+      - app-network
+
+ #PHPMyAdmi Service
+  phpmyadmin:
+    depends_on:
+      - mysql
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    environment:
+      PMA_PORT: 3306
+      PMA_HOST: mysql
+      PMA_USER: user
+      PMA_PASSWORD: mysql_password
+    ports:
+        - "8080:80"
+    networks:
+      - app-network
 
 ############## Proyecto AdmiApp ################
 #Nginx Service
@@ -56,7 +94,7 @@ services:
 #PHP Service
   app:
     build:
-      context: ./alegra-proyect
+      context: ./php
       dockerfile: Dockerfile
     image: admiapp
     container_name: app
