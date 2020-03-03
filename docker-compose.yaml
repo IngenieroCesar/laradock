@@ -43,15 +43,14 @@ services:
       - "80"
     volumes:
       # - ./logs/nginx/:/var/log/nginx
-      - ./alegra-proyect/nginx/sites/:/etc/nginx/sites-available
+      - .//nginx/sites/:/etc/nginx/sites-available
       - ./alegra-proyect:/var/www:cached
       # - ./alegra-proyect/nginx/conf.d/:/etc/nginx/conf.d/
     networks:
       - app-network
-      - appa-network
     environment:
-      - VIRTUAL_HOST=admiapp.com,www.admiapp.com
-      - LETSENCRYPT_HOST=admiapp.com,www.admiapp.com
+      - VIRTUAL_HOST=admiapp.co,www.admiapp.co
+      - LETSENCRYPT_HOST=admiapp.co,www.admiapp.co
       - LETSENCRYPT_EMAIL=cesarago852@gmail.com
 
 #PHP Service
@@ -69,29 +68,13 @@ services:
     volumes:
       - ./alegra-proyect:/var/www
     networks:
-      - appa-network
       - app-network
 
 ############## End Proyecto AdmiApp ################
 
 ############## proyect b ######################
 # nginx server www #
-  www:
-    image: nginx
-    expose:
-      - "80"
-    volumes:
-      - ./a/www:/usr/share/nginx/html:ro
-    environment:
-      - VIRTUAL_HOST=proyectob.admiapp.com
-      - LETSENCRYPT_HOST=proyectob.admiapp.com,www.proyectob.admiapp.com
-      - LETSENCRYPT_EMAIL=cesarago852@gmail.com
-    networks:
-      - app-network
-      - appb-network
-
-
-############## End proyect b ######################
+############# End proyect b ######################
 #Volumes
 volumes:
   nginx_proxy:
@@ -102,8 +85,4 @@ volumes:
 #Docker Networks
 networks:
   app-network:
-    driver: bridge
-  appa-network:
-    driver: bridge
-  appb-network:
     driver: bridge
