@@ -1,0 +1,109 @@
+version: '3.7'
+
+services:
+# nginx-proxy #####################
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./ssl/certs:/etc/nginx/certs:ro
+      - ./ssl/vhostd:/etc/nginx/vhost.d
+      - ./ssl/html:/usr/share/nginx/html
+    labels:
+      - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy
+    networks:
+      - app-network
+
+# #letsencript
+  letsencrypt:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    restart: always
+    environment:
+      - NGINX_PROXY_CONTAINER=nginx-proxy
+    volumes:
+      - ./ssl/certs:/etc/nginx/certs:rw
+      - ./ssl/vhostd:/etc/nginx/vhost.d
+      - ./ssl/html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - app-network
+
+
+############## Proyecto AdmiApp ################
+#Nginx Service
+  webserver:
+    image: nginx:alpine
+    container_name: webserver
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "80"
+    volumes:
+      # - ./logs/nginx/:/var/log/nginx
+      - ./alegra-proyect/nginx/sites/:/etc/nginx/sites-available
+      - ./alegra-proyect:/var/www:cached
+      # - ./alegra-proyect/nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - app-network
+      - appa-network
+    environment:
+      - VIRTUAL_HOST=admiapp.com,www.admiapp.com
+      - LETSENCRYPT_HOST=admiapp.com,www.admiapp.com
+      - LETSENCRYPT_EMAIL=cesarago852@gmail.com
+
+#PHP Service
+  app:
+    build:
+      context: ./alegra-proyect
+      dockerfile: Dockerfile
+    image: admiapp
+    container_name: app
+    restart: unless-stopped
+    tty: true
+    # environment:
+      # VIRTUAL_HOST: admiapp.com
+    working_dir: /var/www
+    volumes:
+      - ./alegra-proyect:/var/www
+    networks:
+      - appa-network
+      - app-network
+
+############## End Proyecto AdmiApp ################
+
+############## proyect b ######################
+# nginx server www #
+  www:
+    image: nginx
+    expose:
+      - "80"
+    volumes:
+      - ./a/www:/usr/share/nginx/html:ro
+    environment:
+      - VIRTUAL_HOST=proyectob.admiapp.com
+      - LETSENCRYPT_HOST=proyectob.admiapp.com,www.proyectob.admiapp.com
+      - LETSENCRYPT_EMAIL=cesarago852@gmail.com
+    networks:
+      - app-network
+      - appb-network
+
+
+############## End proyect b ######################
+#Volumes
+volumes:
+  nginx_proxy:
+    driver: local
+  letsencript:
+    driver: local
+
+#Docker Networks
+networks:
+  app-network:
+    driver: bridge
+  appa-network:
+    driver: bridge
+  appb-network:
+    driver: bridge
