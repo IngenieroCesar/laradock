@@ -4,6 +4,7 @@ services:
 # nginx-proxy #####################
   nginx-proxy:
     image: jwilder/nginx-proxy
+    container_name: proxy
     ports:
       - "80:80"
       - "443:443"
@@ -28,7 +29,7 @@ services:
       - NGINX_PROXY_CONTAINER=nginx-proxy
     volumes:
       - ./nginx/ssl/certs:/etc/nginx/certs:rw
-      - ./nginx/sl/vhostd:/etc/nginx/vhost.d
+      - ./nginx/ssl/vhostd:/etc/nginx/vhost.d
       - ./nginx/ssl/html:/usr/share/nginx/html
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
@@ -135,7 +136,7 @@ services:
     volumes:
       - ./nginx/sites/admicom.conf:/etc/nginx/conf.d/admicom.conf
       - ./nginx/ssl/certs/:/etc/nginx/ssl/
-      - ./alegra-proyect/:/var/www/app2
+      - ./alegra-proyect/:/var/www
     environment:
       - VIRTUAL_HOST=admiapp.com,www.admiapp.com
       - LETSENCRYPT_HOST=admiapp.com,www.admiapp.com
@@ -156,9 +157,9 @@ services:
     tty: true
     # environment:
     #   VIRTUAL_HOST: admiapp.co
-    working_dir: /var/www/app2
+    working_dir: /var/www
     volumes:
-      - ./alegra-proyect:/var/www/app2
+      - ./alegra-proyect:/var/www
     networks:
       - app-network2
 
