@@ -16,23 +16,28 @@ services:
       - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy
     networks:
       - app-network
+      - app-network2
 
 # #letsencript
-  # letsencrypt:
-  #   image: jrcs/letsencrypt-nginx-proxy-companion
-  #   restart: always
-  #   environment:
-  #     - NGINX_PROXY_CONTAINER=nginx-proxy
-  #   volumes:
-  #     - ./nginx/ssl/certs:/etc/nginx/certs:rw
-  #     - ./snginx/sl/vhostd:/etc/nginx/vhost.d
-  #     - ./nginx/ssl/html:/usr/share/nginx/html
-  #     - /var/run/docker.sock:/var/run/docker.sock:ro
-  #   networks:
-  #     - app-network
+  letsencrypt:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    restart: always
+    depends_on:
+      - nginx-proxy
+    environment:
+      - NGINX_PROXY_CONTAINER=nginx-proxy
+    volumes:
+      - ./nginx/ssl/certs:/etc/nginx/certs:rw
+      - ./nginx/sl/vhostd:/etc/nginx/vhost.d
+      - ./nginx/ssl/html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - app-network
 
  #MySQL Service
   mysql:
+    depends_on:
+      - nginx-proxy
     image: mysql:5.7.22
     container_name: mysql
     restart: always
@@ -52,6 +57,7 @@ services:
       - ./mysql/my.cnf/:/etc/mysql/my.cnf
     networks:
       - app-network
+      - app-network2
 
  #PHPMyAdmi Service
   phpmyadmin:
@@ -73,6 +79,8 @@ services:
 ############## Proyecto AdmiApp ################
 #Nginx Service
   webserver:
+    depends_on:
+      - nginx-proxy
     image: nginx:alpine
     container_name: webserver
     restart: unless-stopped
@@ -81,7 +89,7 @@ services:
       - "80"
       - "443"
     volumes:
-      - ./nginx/sites/:/etc/nginx/conf.d/
+      - ./nginx/sites/admiapp.conf:/etc/nginx/conf.d/admiapp.conf
       - ./nginx/ssl/certs/:/etc/nginx/ssl/
       - ./alegra-proyect/:/var/www
     environment:
@@ -94,19 +102,65 @@ services:
 #PHP Service
   app:
     build:
-      context: ./php
+      context: ./alegra-proyect
       dockerfile: Dockerfile
     image: admiapp
     container_name: app
     restart: unless-stopped
+    depends_on:
+      - webserver
     tty: true
     # environment:
-    #   VIRTUAL_HOST: admiapp.com
+    #   VIRTUAL_HOST: admiapp.co
     working_dir: /var/www
     volumes:
       - ./alegra-proyect:/var/www
     networks:
       - app-network
+
+############## End Proyecto AdmiApp ################
+
+############## Proyecto WBdesign ################
+#Nginx Service
+  webserver2:
+    depends_on:
+      - nginx-proxy
+    image: nginx:alpine
+    container_name: webserver2
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "80"
+      - "443"
+    volumes:
+      - ./nginx/sites/admicom.conf:/etc/nginx/conf.d/admicom.conf
+      - ./nginx/ssl/certs/:/etc/nginx/ssl/
+      - ./alegra-proyect/:/var/www/app2
+    environment:
+      - VIRTUAL_HOST=admiapp.com,www.admiapp.com
+      - LETSENCRYPT_HOST=admiapp.com,www.admiapp.com
+      - LETSENCRYPT_EMAIL=cesarago852@gmail.com
+    networks:
+      - app-network2
+
+#PHP Service
+  app2:
+    build:
+      context: ./alegra-proyect
+      dockerfile: Dockerfile
+    image: admiapp
+    container_name: app2
+    restart: unless-stopped
+    depends_on:
+      - webserver
+    tty: true
+    # environment:
+    #   VIRTUAL_HOST: admiapp.co
+    working_dir: /var/www/app2
+    volumes:
+      - ./alegra-proyect:/var/www/app2
+    networks:
+      - app-network2
 
 ############## End Proyecto AdmiApp ################
 
@@ -127,4 +181,6 @@ volumes:
 #Docker Networks
 networks:
   app-network:
+    driver: bridge
+  app-network2:
     driver: bridge
