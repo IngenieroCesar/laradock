@@ -34,6 +34,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - app-network
+      - app-network2
 
  #MySQL Service
   mysql:
@@ -90,9 +91,11 @@ services:
       - "80"
       - "443"
     volumes:
+    
+            # On this file we have the conexión with the app container in php.
       - ./nginx/sites/admiapp.conf:/etc/nginx/conf.d/admiapp.conf
       - ./nginx/ssl/certs/:/etc/nginx/ssl/
-      - ./alegra-proyect/:/var/www
+      - ../alegra-proyect/:/var/www
     environment:
       - VIRTUAL_HOST=admiapp.co,www.admiapp.co
       - LETSENCRYPT_HOST=admiapp.co,www.admiapp.co
@@ -103,7 +106,7 @@ services:
 #PHP Service
   app:
     build:
-      context: ./alegra-proyect
+      context: ../alegra-proyect
       dockerfile: Dockerfile
     image: admiapp
     container_name: app
@@ -115,14 +118,14 @@ services:
     #   VIRTUAL_HOST: admiapp.co
     working_dir: /var/www
     volumes:
-      - ./alegra-proyect:/var/www
+      - ../alegra-proyect:/var/www
     networks:
       - app-network
 
 ############## End Proyecto AdmiApp ################
 
 ############## Proyecto WBdesign ################
-#Nginx Service
+# Nginx Service
   webserver2:
     depends_on:
       - nginx-proxy
@@ -134,12 +137,13 @@ services:
       - "80"
       - "443"
     volumes:
-      - ./nginx/sites/admicom.conf:/etc/nginx/conf.d/admicom.conf
+        # On this file we have the conexión with the app container in php.
+      - ./nginx/sites/complementos360.conf:/etc/nginx/conf.d/complementos360.conf
       - ./nginx/ssl/certs/:/etc/nginx/ssl/
-      - ./alegra-proyect/:/var/www
+      - ../Complementos360:/var/www
     environment:
-      - VIRTUAL_HOST=admiapp.com,www.admiapp.com
-      - LETSENCRYPT_HOST=admiapp.com,www.admiapp.com
+      - VIRTUAL_HOST=test.admiapp.com
+      - LETSENCRYPT_HOST=test.admiapp.com
       - LETSENCRYPT_EMAIL=cesarago852@gmail.com
     networks:
       - app-network2
@@ -147,19 +151,19 @@ services:
 #PHP Service
   app2:
     build:
-      context: ./alegra-proyect
+      context: ../Complementos360
       dockerfile: Dockerfile
     image: admiapp
     container_name: app2
     restart: unless-stopped
     depends_on:
-      - webserver
+      - webserver2
     tty: true
     # environment:
     #   VIRTUAL_HOST: admiapp.co
     working_dir: /var/www
     volumes:
-      - ./alegra-proyect:/var/www
+      - ../Complementos360:/var/www
     networks:
       - app-network2
 
@@ -170,6 +174,10 @@ services:
 ############# End proyect b ######################
 #Volumes
 volumes:
+  webserver2:
+    driver: local
+  app2:
+    driver: local
   webserver:
     driver: local
   app:
